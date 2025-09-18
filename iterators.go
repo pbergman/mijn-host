@@ -2,6 +2,7 @@ package mijn_host
 
 import (
 	"iter"
+	"strings"
 
 	"github.com/libdns/libdns"
 	"github.com/pbergman/libdns-mijn-host/client"
@@ -12,10 +13,16 @@ type ResourceRecordsIterator interface {
 }
 
 func MarshallRecord(zone string, record *libdns.RR) *client.DNSRecord {
+	var name = libdns.AbsoluteName(record.Name, zone)
+
+	if name[len(name)-1] != '.' {
+		name += "."
+	}
+
 	var x = &client.DNSRecord{
 		Type:  record.Type,
 		Value: record.Data,
-		Name:  libdns.AbsoluteName(record.Name, zone) + ".",
+		Name:  name,
 	}
 
 	switch record.TTL.Seconds() {
