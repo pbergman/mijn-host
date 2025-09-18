@@ -1,29 +1,52 @@
-DEVELOPER INSTRUCTIONS:
-=======================
+# Mijn Host for `libdns`
 
-This repo is a template for developers to use when creating new [libdns](https://github.com/libdns/libdns) provider implementations.
+This package implements the libdns interfaces for the [Mijn Host API](https://mijn.host/api/doc/)
 
-Be sure to update:
+## Authenticating
 
-- The package name
-- The Go module name in go.mod
-- The latest `libdns/libdns` version in go.mod
-- All comments and documentation, including README below and godocs
-- License (must be compatible with Apache/MIT)
-- All "TODO:"s is in the code
-- All methods that currently do nothing
+To authenticate, you need to create am api key [here](https://mijn.host/cp/account/api/).
 
-**Please be sure to conform to the semantics described at the [libdns godoc](https://github.com/libdns/libdns).**
+## Example
 
-_Remove this section from the readme before publishing._
+Here's a minimal example of how to get all your DNS records using this `libdns` provider
 
----
+```go
+package main
 
-\<PROVIDER NAME\> for [`libdns`](https://github.com/libdns/libdns)
-=======================
+import (
+	"context"
+	"fmt"
+	"text/tabwriter"
 
-[![Go Reference](https://pkg.go.dev/badge/test.svg)](https://pkg.go.dev/github.com/libdns/TODO:PROVIDER_NAME)
+	mijn_host "github.com/pbergman/libdns-mijn-host"
+)
 
-This package implements the [libdns interfaces](https://github.com/libdns/libdns) for \<PROVIDER\>, allowing you to manage DNS records.
+func main() {
+	provider := mijn_host.NewProvider()
+	provider.SetApiKey("***************************")
+	//provider.SetDebug(os.Stdout)
 
-TODO: Show how to configure and use. Explain any caveats.
+	zones, err := provider.ListZones(context.Background())
+
+	if err != nil {
+		panic(err)
+	}
+
+	var writer = tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', tabwriter.Debug)
+
+	for _, zone := range zones {
+		records, err := provider.GetRecords(context.Background(), zone.Name)
+
+		if err != nil {
+			panic(err)
+		}
+
+		for record := range mijn_host.RecordIterator(records).Iterate() {
+			_, _ = fmt.Fprintf(writer, "%s\t%v\t%s\t%s\n", record.Name, record.TTL.Seconds(), record.Type, record.Data)
+		}
+
+	}
+
+	_ = writer.Flush()
+}
+```

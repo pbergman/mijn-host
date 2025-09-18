@@ -1,52 +1,96 @@
-// Package libdnstemplate implements a DNS record management client compatible
-// with the libdns interfaces for <PROVIDER NAME>. TODO: This package is a
-// template only. Customize all godocs for actual implementation.
-package libdnstemplate
+package mijn_host
 
 import (
-	"context"
-	"fmt"
+	"bytes"
+	"encoding/json"
+	"io"
+	"net"
+	"net/url"
+	"os"
+	"sync"
 
 	"github.com/libdns/libdns"
+	"github.com/pbergman/libdns-mijn-host/client"
 )
 
-// TODO: Providers must not require additional provisioning steps by the callers; it
-// should work simply by populating a struct and calling methods on it. If your DNS
-// service requires long-lived state or some extra provisioning step, do it implicitly
-// when methods are called; sync.Once can help with this, and/or you can use a
-// sync.(RW)Mutex in your Provider struct to synchronize implicit provisioning.
+func NewProvider() *Provider {
+	return &Provider{
+		client: client.NewApiClient("", nil),
+	}
+}
 
-// Provider facilitates DNS record manipulation with <TODO: PROVIDER NAME>.
+type clientConfig struct {
+	ApiKey  string `json:"api_key,omitempty"`
+	Debug   bool   `json:"debug"`
+	BaseUri string `json:"base_uri,omitempty"`
+}
+
 type Provider struct {
-	// TODO: Put config fields here (with snake_case json struct tags on exported fields), for example:
-	APIToken string `json:"api_token,omitempty"`
-
-	// Exported config fields should be JSON-serializable or omitted (`json:"-"`)
+	client   *client.ApiClient
+	mutex    sync.RWMutex
+	resolver *net.Resolver
 }
 
-// GetRecords lists all the records in the zone.
-func (p *Provider) GetRecords(ctx context.Context, zone string) ([]libdns.Record, error) {
-	// Make sure to return RR-type-specific structs, not libdns.RR structs.
-	return nil, fmt.Errorf("TODO: not implemented")
+func (p *Provider) UnmarshalJSON(b []byte) error {
+
+	var data *clientConfig
+
+	decoder := json.NewDecoder(bytes.NewReader(b))
+	decoder.DisallowUnknownFields()
+
+	if err := decoder.Decode(&data); err != nil {
+		return err
+	}
+
+	if data.Debug {
+		p.SetDebug(os.Stdout)
+	}
+
+	if "" != data.BaseUri {
+		if err := p.SetBaseUrl(data.BaseUri); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
-// AppendRecords adds records to the zone. It returns the records that were added.
-func (p *Provider) AppendRecords(ctx context.Context, zone string, records []libdns.Record) ([]libdns.Record, error) {
-	// Make sure to return RR-type-specific structs, not libdns.RR structs.
-	return nil, fmt.Errorf("TODO: not implemented")
+func (p *Provider) MarshalJSON() ([]byte, error) {
+
+	var config = &clientConfig{
+		ApiKey: p.client.GetApiKey(),
+		Debug:  p.client.GetDebug() == nil,
+	}
+
+	if nil != p.client.GetBaseUrl() {
+		config.BaseUri = p.client.GetBaseUrl().String()
+	}
+
+	return json.Marshal(config)
 }
 
-// SetRecords sets the records in the zone, either by updating existing records or creating new ones.
-// It returns the updated records.
-func (p *Provider) SetRecords(ctx context.Context, zone string, records []libdns.Record) ([]libdns.Record, error) {
-	// Make sure to return RR-type-specific structs, not libdns.RR structs.
-	return nil, fmt.Errorf("TODO: not implemented")
+func (p *Provider) SetBaseUrl(base string) error {
+	return p.client.SetBaseUrl(base)
 }
 
-// DeleteRecords deletes the specified records from the zone. It returns the records that were deleted.
-func (p *Provider) DeleteRecords(ctx context.Context, zone string, records []libdns.Record) ([]libdns.Record, error) {
-	// Make sure to return RR-type-specific structs, not libdns.RR structs.
-	return nil, fmt.Errorf("TODO: not implemented")
+func (p *Provider) GetBaseUrl() *url.URL {
+	return p.client.GetBaseUrl()
+}
+
+func (p *Provider) SetApiKey(key string) {
+	p.client.SetApiKey(key)
+}
+
+func (p *Provider) GetApiKey() string {
+	return p.client.GetApiKey()
+}
+
+func (p *Provider) SetDebug(writer io.Writer) {
+	p.client.SetDebug(writer)
+}
+
+func (p *Provider) IsDebug() bool {
+	return nil != p.client.GetDebug()
 }
 
 // Interface guards
@@ -55,4 +99,5 @@ var (
 	_ libdns.RecordAppender = (*Provider)(nil)
 	_ libdns.RecordSetter   = (*Provider)(nil)
 	_ libdns.RecordDeleter  = (*Provider)(nil)
+	_ libdns.ZoneLister     = (*Provider)(nil)
 )
