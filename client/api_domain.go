@@ -24,7 +24,7 @@ func (a *ApiClient) GetDomains(ctx context.Context) ([]*Domain, error) {
 		Data *domainsData `json:"data"`
 	}
 
-	if err := a.fetch(ctx, "domains/", "GET", nil, &object); err != nil {
+	if err := a.fetch(ctx, "domains", "GET", nil, &object); err != nil {
 		return nil, err
 	}
 

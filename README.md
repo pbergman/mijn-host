@@ -50,3 +50,17 @@ func main() {
 	_ = writer.Flush()
 }
 ```
+
+## Testing
+
+This library comes with a test suite that verifies the interface by creating a few test records, validating them, and then removing those records. To run the tests, you can use:
+
+```shell
+API_KEY=<MIJN_HOST_KEY> go test
+```
+
+Or run more verbose test to dump all api requests: 
+
+```shell
+API_KEY=<MIJN_HOST_KEY> DEBUG=1 go test -v 
+```

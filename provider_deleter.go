@@ -2,11 +2,14 @@ package mijn_host
 
 import (
 	"context"
+	"strings"
 
 	"github.com/libdns/libdns"
 	"github.com/pbergman/libdns-mijn-host/client"
 )
 
+// DeleteRecords removes given records from zone which are a match or partial match, based
+// set field. See https://github.com/libdns/libdns/blob/master/libdns.go#L232
 func (p *Provider) DeleteRecords(ctx context.Context, zone string, deletes []libdns.Record) ([]libdns.Record, error) {
 
 	records, err := p.GetRecords(ctx, zone)
@@ -43,12 +46,11 @@ func (p *Provider) DeleteRecords(ctx context.Context, zone string, deletes []lib
 	return removes, nil
 }
 
-// https://github.com/libdns/libdns/blob/master/libdns.go#L232
 func shouldRemove(a, b libdns.Record) bool {
 
 	c, d := a.RR(), b.RR()
 
-	if c.Name != d.Name {
+	if false == strings.EqualFold(c.Name, d.Name) {
 		return false
 	}
 

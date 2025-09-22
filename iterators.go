@@ -2,7 +2,6 @@ package mijn_host
 
 import (
 	"iter"
-	"strings"
 
 	"github.com/libdns/libdns"
 	"github.com/pbergman/libdns-mijn-host/client"
