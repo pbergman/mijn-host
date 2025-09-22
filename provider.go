@@ -93,6 +93,15 @@ func (p *Provider) IsDebug() bool {
 	return nil != p.client.GetDebug()
 }
 
+func fqdn(name string) string {
+
+	if name[len(name)-1] != '.' {
+		return name + "."
+	}
+
+	return name
+}
+
 // Interface guards
 var (
 	_ libdns.RecordGetter   = (*Provider)(nil)

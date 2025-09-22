@@ -12,16 +12,11 @@ type ResourceRecordsIterator interface {
 }
 
 func MarshallRecord(zone string, record *libdns.RR) *client.DNSRecord {
-	var name = libdns.AbsoluteName(record.Name, zone)
-
-	if name[len(name)-1] != '.' {
-		name += "."
-	}
 
 	var x = &client.DNSRecord{
 		Type:  record.Type,
 		Value: record.Data,
-		Name:  name,
+		Name:  fqdn(libdns.AbsoluteName(record.Name, zone)),
 	}
 
 	switch record.TTL.Seconds() {

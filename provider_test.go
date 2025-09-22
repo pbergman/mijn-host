@@ -28,6 +28,8 @@ func TestProvider(t *testing.T) {
 
 	for _, zone := range zones {
 
+		t.Logf("zone: %s", zone.Name)
+
 		var name = fmt.Sprintf("__test_%s", randomString(8))
 		var value1 = randomString(32)
 		var value2 = randomString(32)

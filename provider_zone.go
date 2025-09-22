@@ -20,7 +20,7 @@ func (p *Provider) ListZones(ctx context.Context) ([]libdns.Zone, error) {
 
 	for i, c := 0, len(domains); i < c; i++ {
 		zones[i] = libdns.Zone{
-			Name: domains[i].Domain,
+			Name: fqdn(domains[i].Domain),
 		}
 	}
 
