@@ -1,4 +1,4 @@
-module github.com/pbergman/libdns-mijn-host
+module github.com/pbergman/mijn-host
 
 go 1.24.4
 
