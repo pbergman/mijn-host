@@ -18,7 +18,7 @@ import (
 	"fmt"
 	"text/tabwriter"
 
-	mijn_host "github.com/pbergman/libdns-mijn-host"
+	mijn_host "github.com/pbergman/mijn-host"
 )
 
 func main() {

@@ -10,7 +10,7 @@ import (
 	"sync"
 
 	"github.com/libdns/libdns"
-	"github.com/pbergman/libdns-mijn-host/client"
+	"github.com/pbergman/mijn-host/client"
 )
 
 func NewProvider() *Provider {

@@ -4,7 +4,7 @@ import (
 	"iter"
 
 	"github.com/libdns/libdns"
-	"github.com/pbergman/libdns-mijn-host/client"
+	"github.com/pbergman/mijn-host/client"
 )
 
 type ResourceRecordsIterator interface {

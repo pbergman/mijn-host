@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/libdns/libdns"
-	"github.com/pbergman/libdns-mijn-host/client"
+	"github.com/pbergman/mijn-host/client"
 )
 
 // DeleteRecords removes given records from zone which are a match or partial match, based

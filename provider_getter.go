@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/libdns/libdns"
-	"github.com/pbergman/libdns-mijn-host/client"
+	"github.com/pbergman/mijn-host/client"
 )
 
 func (p *Provider) GetRecords(ctx context.Context, zone string) ([]libdns.Record, error) {

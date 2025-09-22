@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/libdns/libdns"
-	"github.com/pbergman/libdns-mijn-host/client"
+	"github.com/pbergman/mijn-host/client"
 )
 
 func (p *Provider) SetRecords(ctx context.Context, zone string, recs []libdns.Record) ([]libdns.Record, error) {
