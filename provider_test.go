@@ -28,6 +28,10 @@ func TestProvider_Unmarshall(t *testing.T) {
 		t.Fatalf("api key = %s; want %s", provider.GetApiKey(), "testkey")
 	}
 
+	if provider.BaseUri != "" {
+		t.Fatal("base uri should be empty")
+	}
+
 	if provider.GetBaseUrl().String() != "http://127.0.0.1:8080" {
 		t.Fatalf("base uri = %s; want %s", provider.GetBaseUrl().String(), "http://127.0.0.1:8080")
 	}

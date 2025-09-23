@@ -1,9 +1,9 @@
 package mijnhost
 
 import (
+	"encoding/json"
 	"io"
 	"net/url"
-	"os"
 	"sync"
 
 	"github.com/libdns/libdns"
@@ -13,21 +13,46 @@ import (
 type Provider struct {
 	// ApiKey used for authenticating the mijn.host api see:
 	// https://mijn.host/api/doc/doc-343216#obtaining-your-api-key
-	ApiKey string `json:"api_key,omitempty"`
+	ApiKey string
 	// Debug when true it will dump the http.Client request/response to os.Stdout
 	// for now you can change that by calling `SetDebug(w io.Writer)` direct
-	Debug bool `json:"debug"`
+	Debug bool
 	// BaseUri used for the api calls and will default to https://mijn.host/api/v2/
-	BaseUri string `json:"base_uri,omitempty"`
+	BaseUri string
 
 	client *client.ApiClient
 	mutex  sync.RWMutex
 }
 
-func (p *Provider) getClient() *client.ApiClient {
+func (p *Provider) MarshalJSON() ([]byte, error) {
+	if p.client != nil {
 
+		var object = configApi{
+			ApiKey:  p.client.GetApiKey(),
+			Debug:   p.Debug,
+			BaseUri: p.client.GetBaseUrl().String(),
+		}
+
+		return json.Marshal(object)
+	} else {
+		return json.Marshal(p)
+	}
+}
+
+func (p *Provider) UnmarshalJSON(data []byte) error {
+	var object configApi
+
+	if err := json.Unmarshal(data, &object); err != nil {
+		return err
+	}
+
+	reload(p, &object)
+
+	return nil
+}
+
+func (p *Provider) getClient() *client.ApiClient {
 	if nil == p.client {
-		p.client = client.NewApiClient("", nil)
 		p.ReloadConfig()
 	}
 
@@ -35,24 +60,7 @@ func (p *Provider) getClient() *client.ApiClient {
 }
 
 func (p *Provider) ReloadConfig() {
-
-	if p.Debug {
-		p.client.SetDebug(os.Stdout)
-	} else {
-		p.client.SetDebug(nil)
-	}
-
-	if "" != p.ApiKey {
-		p.client.SetApiKey(p.ApiKey)
-	}
-
-	if "" != p.BaseUri {
-		_ = p.client.SetBaseUrl(p.BaseUri)
-	}
-
-	p.client.CloseIdleConnections()
-	p.ApiKey = ""
-	p.BaseUri = ""
+	reload(p, &configWrapper{p})
 }
 
 func (p *Provider) GetBaseUrl() *url.URL {
