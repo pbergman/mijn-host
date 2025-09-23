@@ -10,81 +10,19 @@ import (
 	"strings"
 )
 
-func NewApiClient(key string, debug io.Writer) *ApiClient {
-	client := &ApiClient{
+func NewApiClient(x ApiClientConfig) *ApiClient {
+	return &ApiClient{
 		client: &http.Client{
 			Transport: &apiTransport{
-				RoundTripper: http.DefaultTransport,
-				apiKey:       key,
-				debug:        debug,
+				RoundTripper:    http.DefaultTransport,
+				ApiClientConfig: x,
 			},
 		},
 	}
-
-	_ = client.SetBaseUrl("https://mijn.host/api/v2/")
-
-	return client
 }
 
 type ApiClient struct {
 	client *http.Client
-}
-
-func (p *ApiClient) CloseIdleConnections() {
-	p.client.CloseIdleConnections()
-}
-
-func (p *ApiClient) getTransport() *apiTransport {
-
-	if transport, ok := p.client.Transport.(*apiTransport); ok {
-		return transport
-	}
-
-	return nil
-}
-
-func (p *ApiClient) SetDebug(writer io.Writer) {
-	if transport := p.getTransport(); nil != transport {
-		transport.debug = writer
-	}
-}
-
-func (p *ApiClient) GetDebug() io.Writer {
-	if transport := p.getTransport(); nil != transport {
-		return transport.debug
-	}
-	return nil
-}
-
-func (p *ApiClient) SetApiKey(key string) {
-	if transport := p.getTransport(); nil != transport {
-		transport.apiKey = key
-	}
-}
-
-func (p *ApiClient) GetApiKey() string {
-	if transport := p.getTransport(); nil != transport {
-		return transport.apiKey
-	}
-	return ""
-}
-
-func (p *ApiClient) GetBaseUrl() *url.URL {
-	if transport := p.getTransport(); nil != transport {
-		return transport.baseUri
-	}
-	return nil
-}
-
-func (p *ApiClient) SetBaseUrl(base string) error {
-	if transport := p.getTransport(); nil != transport {
-		uri, err := url.Parse(base)
-		if err != nil {
-			return err
-		}
-		transport.baseUri = uri
-	}
-	return nil
 }
 
 func (a *ApiClient) toDnsPath(domain string) string {

@@ -1,73 +1,37 @@
 package mijnhost
 
 import (
-	"os"
-
-	"github.com/pbergman/mijnhost/client"
+	"net/url"
+	"strconv"
 )
 
-type config interface {
-	getApiKey() string
-	isDebug() bool
-	getBaseUri() string
+func DefaultApiBaseUri() *ApiBaseUri {
+	return &ApiBaseUri{
+		Scheme: "https",
+		Host:   "mijn.host",
+		Path:   "/api/v2/",
+	}
 }
 
-type configWrapper struct {
-	p *Provider
+type ApiBaseUri url.URL
+
+func (a *ApiBaseUri) MarshalJSON() ([]byte, error) {
+	return []byte((*url.URL)(a).String()), nil
 }
 
-func (p *configWrapper) getApiKey() string {
-	return p.p.ApiKey
-}
+func (a *ApiBaseUri) UnmarshalJSON(data []byte) error {
 
-func (p *configWrapper) isDebug() bool {
-	return p.p.Debug
-}
-
-func (p *configWrapper) getBaseUri() string {
-	return p.p.BaseUri
-}
-
-type configApi struct {
-	ApiKey  string `json:"api_key"`
-	Debug   bool   `json:"debug"`
-	BaseUri string `json:"base_uri"`
-}
-
-func (p *configApi) getApiKey() string {
-	return p.ApiKey
-}
-
-func (p *configApi) isDebug() bool {
-	return p.Debug
-}
-
-func (p *configApi) getBaseUri() string {
-	return p.BaseUri
-}
-
-func reload(p *Provider, data config) {
-
-	if nil == p.client {
-		p.client = client.NewApiClient("", nil)
-	} else {
-		p.client.CloseIdleConnections()
+	if out, err := strconv.Unquote(string(data)); err == nil {
+		data = []byte(out)
 	}
 
-	if data.isDebug() {
-		p.SetDebug(os.Stdout)
-	} else {
-		p.SetDebug(nil)
+	b, err := url.Parse(string(data))
+
+	if err != nil {
+		return err
 	}
 
-	if key := data.getApiKey(); key != "" {
-		p.client.SetApiKey(key)
-	}
+	*a = ApiBaseUri(*b)
 
-	if uri := data.getBaseUri(); uri != "" {
-		_ = p.client.SetBaseUrl(uri)
-	}
-
-	p.ApiKey = ""
-	p.BaseUri = ""
+	return nil
 }

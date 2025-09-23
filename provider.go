@@ -1,9 +1,9 @@
 package mijnhost
 
 import (
-	"encoding/json"
 	"io"
 	"net/url"
+	"os"
 	"sync"
 
 	"github.com/libdns/libdns"
@@ -13,71 +13,52 @@ import (
 type Provider struct {
 	// ApiKey used for authenticating the mijn.host api see:
 	// https://mijn.host/api/doc/doc-343216#obtaining-your-api-key
-	ApiKey string
+	ApiKey string `json:"api_key"`
 	// Debug when true it will dump the http.Client request/response to os.Stdout
-	// for now you can change that by calling `SetDebug(w io.Writer)` direct
-	Debug bool
+	// or you can change that by setting `DebugOut`
+	Debug    bool      `json:"debug"`
+	DebugOut io.Writer `json:"-"`
 	// BaseUri used for the api calls and will default to https://mijn.host/api/v2/
-	BaseUri string
+	BaseUri *ApiBaseUri `json:"base_uri"`
 
 	client *client.ApiClient
 	mutex  sync.RWMutex
 }
 
-func (p *Provider) MarshalJSON() ([]byte, error) {
-	if p.client != nil {
-
-		var object = configApi{
-			ApiKey:  p.client.GetApiKey(),
-			Debug:   p.Debug,
-			BaseUri: p.client.GetBaseUrl().String(),
-		}
-
-		return json.Marshal(object)
-	} else {
-		return json.Marshal(p)
-	}
-}
-
-func (p *Provider) UnmarshalJSON(data []byte) error {
-	var object configApi
-
-	if err := json.Unmarshal(data, &object); err != nil {
-		return err
-	}
-
-	reload(p, &object)
-
-	return nil
-}
-
 func (p *Provider) getClient() *client.ApiClient {
 	if nil == p.client {
-		p.ReloadConfig()
+
+		if p.BaseUri == nil {
+			p.BaseUri = DefaultApiBaseUri()
+		}
+
+		p.client = client.NewApiClient(p)
 	}
 
 	return p.client
 }
 
-func (p *Provider) ReloadConfig() {
-	reload(p, &configWrapper{p})
+func (o *Provider) GetApiKey() string {
+	return o.ApiKey
 }
 
-func (p *Provider) GetBaseUrl() *url.URL {
-	return p.getClient().GetBaseUrl()
+func (o *Provider) GetDebug() io.Writer {
+	if o.Debug {
+		if nil == o.DebugOut {
+			return os.Stdout
+		}
+		return o.DebugOut
+	}
+	return nil
 }
 
-func (p *Provider) GetApiKey() string {
-	return p.getClient().GetApiKey()
-}
+func (o *Provider) GetBaseUri() *url.URL {
 
-func (p *Provider) SetDebug(writer io.Writer) {
-	p.Debug = writer != nil
-	p.getClient().SetDebug(writer)
-}
+	if nil == o.BaseUri {
+		return nil
+	}
 
-func (p *Provider) IsDebug() bool {
-	return nil != p.getClient().GetDebug()
+	return (*url.URL)(o.BaseUri)
 }
 
 func fqdn(name string) string {
@@ -91,9 +72,10 @@ func fqdn(name string) string {
 
 // Interface guards
 var (
-	_ libdns.RecordGetter   = (*Provider)(nil)
-	_ libdns.RecordAppender = (*Provider)(nil)
-	_ libdns.RecordSetter   = (*Provider)(nil)
-	_ libdns.RecordDeleter  = (*Provider)(nil)
-	_ libdns.ZoneLister     = (*Provider)(nil)
+	_ client.ApiClientConfig = (*Provider)(nil)
+	_ libdns.RecordGetter    = (*Provider)(nil)
+	_ libdns.RecordAppender  = (*Provider)(nil)
+	_ libdns.RecordSetter    = (*Provider)(nil)
+	_ libdns.RecordDeleter   = (*Provider)(nil)
+	_ libdns.ZoneLister      = (*Provider)(nil)
 )

@@ -28,19 +28,11 @@ func TestProvider_Unmarshall(t *testing.T) {
 		t.Fatalf("api key = %s; want %s", provider.GetApiKey(), "testkey")
 	}
 
-	if provider.BaseUri != "" {
-		t.Fatal("base uri should be empty")
+	if provider.GetBaseUri().String() != "http://127.0.0.1:8080" {
+		t.Fatalf("base uri = %s; want %s", provider.GetBaseUri().String(), "http://127.0.0.1:8080")
 	}
 
-	if provider.GetBaseUrl().String() != "http://127.0.0.1:8080" {
-		t.Fatalf("base uri = %s; want %s", provider.GetBaseUrl().String(), "http://127.0.0.1:8080")
-	}
-
-	if provider.Debug == false {
-		t.Fatal("expected debug to be true")
-	}
-
-	if provider.getClient().GetDebug() != os.Stdout {
+	if provider.GetDebug() != os.Stdout {
 		t.Fatal("expected debug to be os.Stdout")
 	}
 }
@@ -50,7 +42,7 @@ func TestProvider(t *testing.T) {
 	provider := &Provider{ApiKey: os.Getenv("API_KEY")}
 
 	if _, ok := os.LookupEnv("DEBUG"); ok {
-		provider.SetDebug(os.Stdout)
+		provider.Debug = true
 	}
 
 	zones, err := provider.ListZones(context.Background())
