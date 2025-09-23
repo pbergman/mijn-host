@@ -11,10 +11,11 @@ import (
 )
 
 type apiTransport struct {
+	http.RoundTripper
+
 	baseUri *url.URL
 	apiKey  string
 	debug   io.Writer
-	inner   http.RoundTripper
 }
 
 func (a *apiTransport) RoundTrip(request *http.Request) (*http.Response, error) {
@@ -32,7 +33,7 @@ func (a *apiTransport) RoundTrip(request *http.Request) (*http.Response, error) 
 		dump(request, httputil.DumpRequest, "c", a.debug)
 	}
 
-	response, err := a.inner.RoundTrip(request)
+	response, err := a.RoundTripper.RoundTrip(request)
 
 	if nil != a.debug && nil != response {
 		dump(response, httputil.DumpResponse, "s", a.debug)

@@ -1,96 +1,75 @@
-package mijn_host
+package mijnhost
 
 import (
-	"bytes"
-	"encoding/json"
 	"io"
-	"net"
 	"net/url"
 	"os"
 	"sync"
 
 	"github.com/libdns/libdns"
-	"github.com/pbergman/mijn-host/client"
+	"github.com/pbergman/mijnhost/client"
 )
 
-func NewProvider() *Provider {
-	return &Provider{
-		client: client.NewApiClient("", nil),
-	}
-}
-
-type clientConfig struct {
-	ApiKey  string `json:"api_key,omitempty"`
-	Debug   bool   `json:"debug"`
-	BaseUri string `json:"base_uri,omitempty"`
-}
-
 type Provider struct {
-	client   *client.ApiClient
-	mutex    sync.RWMutex
-	resolver *net.Resolver
+	// ApiKey used for authenticating the mijn.host api see:
+	// https://mijn.host/api/doc/doc-343216#obtaining-your-api-key
+	ApiKey string `json:"api_key,omitempty"`
+	// Debug when true it will dump the http.Client request/response to os.Stdout
+	// for now you can change that by calling `SetDebug(w io.Writer)` direct
+	Debug bool `json:"debug"`
+	// BaseUri used for the api calls and will default to https://mijn.host/api/v2/
+	BaseUri string `json:"base_uri,omitempty"`
+
+	client *client.ApiClient
+	mutex  sync.RWMutex
 }
 
-func (p *Provider) UnmarshalJSON(b []byte) error {
+func (p *Provider) getClient() *client.ApiClient {
 
-	var data *clientConfig
-
-	decoder := json.NewDecoder(bytes.NewReader(b))
-	decoder.DisallowUnknownFields()
-
-	if err := decoder.Decode(&data); err != nil {
-		return err
+	if nil == p.client {
+		p.client = client.NewApiClient("", nil)
+		p.ReloadConfig()
 	}
 
-	if data.Debug {
-		p.SetDebug(os.Stdout)
-	}
-
-	if "" != data.BaseUri {
-		if err := p.SetBaseUrl(data.BaseUri); err != nil {
-			return err
-		}
-	}
-
-	return nil
+	return p.client
 }
 
-func (p *Provider) MarshalJSON() ([]byte, error) {
+func (p *Provider) ReloadConfig() {
 
-	var config = &clientConfig{
-		ApiKey: p.client.GetApiKey(),
-		Debug:  p.client.GetDebug() == nil,
+	if p.Debug {
+		p.client.SetDebug(os.Stdout)
+	} else {
+		p.client.SetDebug(nil)
 	}
 
-	if nil != p.client.GetBaseUrl() {
-		config.BaseUri = p.client.GetBaseUrl().String()
+	if "" != p.ApiKey {
+		p.client.SetApiKey(p.ApiKey)
 	}
 
-	return json.Marshal(config)
-}
+	if "" != p.BaseUri {
+		_ = p.client.SetBaseUrl(p.BaseUri)
+	}
 
-func (p *Provider) SetBaseUrl(base string) error {
-	return p.client.SetBaseUrl(base)
+	p.client.CloseIdleConnections()
+	p.ApiKey = ""
+	p.BaseUri = ""
 }
 
 func (p *Provider) GetBaseUrl() *url.URL {
-	return p.client.GetBaseUrl()
-}
-
-func (p *Provider) SetApiKey(key string) {
-	p.client.SetApiKey(key)
+	return p.getClient().GetBaseUrl()
 }
 
 func (p *Provider) GetApiKey() string {
-	return p.client.GetApiKey()
+	return p.getClient().GetApiKey()
 }
 
 func (p *Provider) SetDebug(writer io.Writer) {
-	p.client.SetDebug(writer)
+	p.Debug = writer != nil
+	p.getClient().SetDebug(writer)
 }
 
 func (p *Provider) IsDebug() bool {
-	return nil != p.client.GetDebug()
+	return nil != p.getClient().GetDebug()
 }
 
 func fqdn(name string) string {

@@ -1,11 +1,11 @@
-package mijn_host
+package mijnhost
 
 import (
 	"context"
 	"strings"
 
 	"github.com/libdns/libdns"
-	"github.com/pbergman/mijn-host/client"
+	"github.com/pbergman/mijnhost/client"
 )
 
 // DeleteRecords removes given records from zone which are a match or partial match, based
@@ -39,7 +39,7 @@ func (p *Provider) DeleteRecords(ctx context.Context, zone string, deletes []lib
 		items = append(items, item)
 	}
 
-	if err := p.client.SetDNSRecords(ctx, zone, items); err != nil {
+	if err := p.getClient().SetDNSRecords(ctx, zone, items); err != nil {
 		return nil, err
 	}
 

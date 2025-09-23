@@ -16,15 +16,17 @@ package main
 import (
 	"context"
 	"fmt"
+	"os"
 	"text/tabwriter"
 
-	mijn_host "github.com/pbergman/mijn-host"
+	"github.com/pbergman/mijnhost"
 )
 
-func main() {
-	provider := mijn_host.NewProvider()
-	provider.SetApiKey("***************************")
-	//provider.SetDebug(os.Stdout)
+func main() { 
+	var provider = &mijnhost.Provider{
+		ApiKey: "***************************",
+		Debug:  true,
+    }
 
 	zones, err := provider.ListZones(context.Background())
 
@@ -41,7 +43,7 @@ func main() {
 			panic(err)
 		}
 
-		for record := range mijn_host.RecordIterator(records).Iterate() {
+		for record := range mijnhost.RecordIterator(records).Iterate() {
 			_, _ = fmt.Fprintf(writer, "%s\t%v\t%s\t%s\n", record.Name, record.TTL.Seconds(), record.Type, record.Data)
 		}
 

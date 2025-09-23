@@ -11,13 +11,12 @@ import (
 )
 
 func NewApiClient(key string, debug io.Writer) *ApiClient {
-
 	client := &ApiClient{
 		client: &http.Client{
 			Transport: &apiTransport{
-				inner:  http.DefaultTransport,
-				apiKey: key,
-				debug:  debug,
+				RoundTripper: http.DefaultTransport,
+				apiKey:       key,
+				debug:        debug,
 			},
 		},
 	}
@@ -31,10 +30,16 @@ type ApiClient struct {
 	client *http.Client
 }
 
+func (p *ApiClient) CloseIdleConnections() {
+	p.client.CloseIdleConnections()
+}
+
 func (p *ApiClient) getTransport() *apiTransport {
+
 	if transport, ok := p.client.Transport.(*apiTransport); ok {
 		return transport
 	}
+
 	return nil
 }
 

@@ -1,10 +1,10 @@
-package mijn_host
+package mijnhost
 
 import (
 	"context"
 
 	"github.com/libdns/libdns"
-	"github.com/pbergman/mijn-host/client"
+	"github.com/pbergman/mijnhost/client"
 )
 
 func (p *Provider) SetRecords(ctx context.Context, zone string, recs []libdns.Record) ([]libdns.Record, error) {
@@ -35,7 +35,7 @@ outerLoop:
 		set = append(set, MarshallRecord(zone, &item))
 	}
 
-	if err := p.client.SetDNSRecords(ctx, zone, set); err != nil {
+	if err := p.getClient().SetDNSRecords(ctx, zone, set); err != nil {
 		return nil, err
 	}
 

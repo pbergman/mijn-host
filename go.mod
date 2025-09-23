@@ -1,4 +1,4 @@
-module github.com/pbergman/mijn-host
+module github.com/pbergman/mijnhost
 
 go 1.24.4
 

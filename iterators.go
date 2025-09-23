@@ -1,10 +1,10 @@
-package mijn_host
+package mijnhost
 
 import (
 	"iter"
 
 	"github.com/libdns/libdns"
-	"github.com/pbergman/mijn-host/client"
+	"github.com/pbergman/mijnhost/client"
 )
 
 type ResourceRecordsIterator interface {

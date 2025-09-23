@@ -1,18 +1,18 @@
-package mijn_host
+package mijnhost
 
 import (
 	"context"
 	"time"
 
 	"github.com/libdns/libdns"
-	"github.com/pbergman/mijn-host/client"
+	"github.com/pbergman/mijnhost/client"
 )
 
 func (p *Provider) GetRecords(ctx context.Context, zone string) ([]libdns.Record, error) {
 	p.mutex.RLock()
 	defer p.mutex.RUnlock()
 
-	items, err := p.client.GetDNSRecords(ctx, zone)
+	items, err := p.getClient().GetDNSRecords(ctx, zone)
 
 	if err != nil {
 		return nil, err

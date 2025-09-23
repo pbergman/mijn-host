@@ -1,4 +1,4 @@
-package mijn_host
+package mijnhost
 
 import (
 	"context"
@@ -10,7 +10,7 @@ func (p *Provider) ListZones(ctx context.Context) ([]libdns.Zone, error) {
 	p.mutex.RLock()
 	defer p.mutex.RUnlock()
 
-	domains, err := p.client.GetDomains(ctx)
+	domains, err := p.getClient().GetDomains(ctx)
 
 	if err != nil {
 		return nil, err

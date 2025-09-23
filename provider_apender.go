@@ -1,4 +1,4 @@
-package mijn_host
+package mijnhost
 
 import (
 	"context"
@@ -10,7 +10,7 @@ func (p *Provider) AppendRecords(ctx context.Context, zone string, recs []libdns
 	p.mutex.Lock()
 	defer p.mutex.Unlock()
 
-	records, err := p.client.GetDNSRecords(ctx, zone)
+	records, err := p.getClient().GetDNSRecords(ctx, zone)
 
 	if err != nil {
 		return nil, err
@@ -25,7 +25,7 @@ func (p *Provider) AppendRecords(ctx context.Context, zone string, recs []libdns
 	}
 
 	if len(records) > size {
-		if err := p.client.SetDNSRecords(ctx, zone, records); err != nil {
+		if err := p.getClient().SetDNSRecords(ctx, zone, records); err != nil {
 			return nil, err
 		}
 	}
